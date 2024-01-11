@@ -12,10 +12,10 @@ app.post('/registraAtendimento', (req, res) => {
 
   // Lógica para processar os dados e gerar a resposta
   const codigoRetorno = "123";
-  const descricaoRetorno = "Sucesso";
-  const valor = "100.00";
-  const textoTicket = "Ticket gerado com sucesso";
-  const chaveCliente = "cliente123";
+  const descricaoRetorno = "Código Inválido";
+  const valor = "";
+  const textoTicket = ""; // Mensagem com o token
+  const chaveCliente = "cliente123"; // CPF do cliente, protocolo e data //
 
   // Construa o objeto de resposta
   const resposta = {
