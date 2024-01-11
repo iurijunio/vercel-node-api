@@ -24,7 +24,7 @@ app.post('/registraAtendimento', (req, res) => {
     valor: valor,
     texto_ticket: textoTicket,
     chave_cliente: chaveCliente
-  };
+  }; 
 
   // Envie a resposta
   res.json(resposta);
