@@ -1,0 +1,220 @@
+@import url('https://fonts.googleapis.com/css2?family=Karla:ital,wght@0,200..800;1,200..800&display=swap');
+
+* {
+  font-family: "Karla", sans-serif;
+  font-optical-sizing: auto;
+  box-sizing: border-box !important;
+  outline: none !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  padding: 0;
+  margin: 0;
+  border: none;
+}
+
+main {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #d0d0ce;
+  padding: 47.5px;
+
+}
+
+.card-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  padding: 0;
+  border-radius: 27.5px;
+  box-shadow: 0 10px 30px 0 rgba(172, 168, 168, .43);
+  overflow: hidden;
+  max-width: 1140px;
+  width: 100%;
+  height: 602.25px;
+}
+
+.card-divisor-1 {
+  width: 45%;
+  border: 0;
+  height: 100%;
+}
+
+.card-divisor-1 img {
+  width: 100%;
+  height: 100%;
+  -o-object-fit: cover;
+  object-fit: cover;
+  vertical-align: middle;
+  border-style: none;
+}
+
+.card-divisor-2 {
+  height: 100%;
+  width: 55%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 93px 110px;
+}
+
+.card-divisor-2 form {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  width: 100%;
+}
+
+.card-divisor-2 .desc {
+  font-size: 13px;
+  color: #000;
+  font-weight: 400;
+  margin-bottom: 20px;
+}
+
+.card-divisor-2 form input,
+.card-divisor-2 form select,
+#result a {
+  border: 1px solid #d5dae2;
+  padding: 0px 25px;
+  margin-bottom: 20px;
+  height: 45px;
+  font-size: 13px;
+  font-weight: 400;
+  display: block;
+  width: 100%;
+  line-height: 1.5;
+  color: #495057;
+  background-color: #fff;
+  background-clip: padding-box;
+  border-radius: .25rem;
+  transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+}
+
+.card-divisor-2 form input:disabled,
+.card-divisor-2 form select:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.card-divisor-2 form select {
+  cursor: pointer;
+}
+
+.card-divisor-2 form select option {
+  color: #000;
+  height: 40px !important;
+  font-size: 14px;
+}
+.card-divisor-2 form select option:disabled {
+  color: #888;
+}
+
+.card-divisor-2 form select:focus,
+.card-divisor-2 form input:focus {
+  color: #495057;
+  background-color: #fff;
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .25);
+}
+
+.card-divisor-2 form .btn-send,
+#result a {
+  padding: 13px 20px 12px;
+  background-color: #2477d7;
+  border-radius: 4px;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 20px;
+  color: #fff;
+  margin-bottom: 24px;
+  cursor: pointer;
+}
+
+.card-divisor-2 form .btn-send:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.card-divisor-2 img {
+  width: auto;
+  height: 111px;
+}
+
+#result p {
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+#result a {
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  background: #32a852;
+}
+
+#errorMessage {
+  margin: 0;
+  padding: 10px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  background: #de614b;
+  color: #FFF;
+  border-radius: 4px;
+  width: 100%;
+  display: none;
+}
+
+
+
+/* MEDIA QUERY */
+
+@media (max-width: 1100px) {
+  .card-divisor-1 {
+    width: 50%;
+  }
+
+  .card-divisor-2 {
+    width: 50%;
+    padding: 80px 65px;
+  }
+}
+
+@media (max-width: 950px) {
+  .card-divisor-2 {
+    padding: 80px 50px;
+  }
+}
+
+@media (max-width: 750px) {
+  .card-divisor-1 {
+    display: none;
+  }
+
+  .card-divisor-2 {
+    width: 70%;
+    padding: 80px 0;
+  }
+}
+
+@media (max-width: 600px) {
+  main {
+    padding: 20px;
+  }
+}
