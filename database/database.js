@@ -32,14 +32,14 @@ function insertData(userId, protocol, callback) {
 }
 
 function getData(user_id, protocol, callback) {
-  let sql = `SELECT id, user_id, protocol FROM "user" WHERE 1`;
+  let sql = `SELECT id, user_id, protocol FROM "user" WHERE`;
   let params = [];
 
   if (protocol) {
-    sql += ` AND protocol = $1`;
+    sql += ` protocol = $1`;
     params.push(protocol);
   } else if (user_id) {
-    sql += ` AND user_id = $1`;
+    sql += ` user_id = $1`;
     params.push(user_id);
   } else {
     return callback([]);
