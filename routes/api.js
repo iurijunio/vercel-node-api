@@ -6,6 +6,8 @@ const api = "https://videoead.com/nuclemig/api/v2/index.php?";
 const token = "99972.03217966246tokenavancada";
 const config = { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } };
 
+const db = require('../database/database');
+
 router.use(bodyParser.json());
 
 function getAPIParamsConfig(telefoneUsuario, cpfUsuario, nomeUsuario, protocolo) {
@@ -14,7 +16,6 @@ function getAPIParamsConfig(telefoneUsuario, cpfUsuario, nomeUsuario, protocolo)
   formData.append("fone", telefoneUsuario);
   formData.append("cpf", cpfUsuario);
   formData.append("nome", nomeUsuario);
-  formData.append("obs", protocolo);
   return { formData };
 }
 
@@ -28,14 +29,24 @@ router.post('/registraAtendimento', async (req, res) => {
       const { erro, resultado } = escolaAvancadaAPI.data;
       
       if (resultado && resultado.login) {
-        res.status(200).json({
-          codigo_retorno: "00",
-          descricao_retorno: "Operação realizada com sucesso.",
-          valor: "3500",
-          texto_ticket: `
-          Prontinho! Agora falta redefinir a sua Senha!+Acesse o link com as credenciais PROVISORIAS:+Login: ${resultado.login}+Senha: ${resultado.senha}+https://videoead.com/nuclemig/metodo/login.php+Na plataforma, no canto superior direito:+1 - Clique sobre seu NOME+2 - Selecione a opcao MEU PERFIL+3 - No campo SENHA, digite uma nova SENHA+4 - Clique em Salvar e guarde a nova senha+5 - Pronto! Sua nova senha foi redefinida!`,
-          chave_cliente: `${resultado.login}.${protocolo}`,
-        });
+        const resData = await saveUserProtocolDB(resultado.login, protocolo);
+        if(resData.id && resData.id != -1) {
+          res.status(200).json({
+            codigo_retorno: "00",
+            descricao_retorno: "Operação realizada com sucesso.",
+            valor: "3500",
+            texto_ticket: `
+            Prontinho! Agora falta redefinir a sua Senha!+Acesse o link com as credenciais PROVISORIAS:+Login: ${resultado.login}+Senha: ${resultado.senha}+https://videoead.com/nuclemig/metodo/login.php+Na plataforma, no canto superior direito:+1 - Clique sobre seu NOME+2 - Selecione a opcao MEU PERFIL+3 - No campo SENHA, digite uma nova SENHA+4 - Clique em Salvar e guarde a nova senha+5 - Pronto! Sua nova senha foi redefinida!`,
+            //"nuclemigcorreios.com.br?cpf=01944462635";
+            chave_cliente: `${resultado.login}.${protocolo}`,
+          });
+        }
+        else {
+          res.status(400).json({
+            codigo_retorno: "-1",
+            descricao_retorno: `${resultado ? resultado : erro ? erro : "Os dados não foram armazenados."}`,
+          });
+        }
       }
       else {
         res.status(400).json({
@@ -59,47 +70,75 @@ router.post('/registraAtendimento', async (req, res) => {
 router.post('/confirmarAtendimento', async (req, res) => {
   try {
     const { protocolo, codigoConfirmacao } = req.body;
-    const formData = new URLSearchParams();
-    formData.append("token", token);
-    formData.append("id", protocolo.split(".")[0]);
+    if(codigoConfirmacao == "00") {
+      const dbData = await getUserProtocolDB("", protocolo);
+      
+      if(dbData && dbData.length) {
+        const userEA = await getUserEA(dbData[0].user_id);
+        
+        if(userEA && userEA.login) {
+          const delUser = await deleteUserDB(userEA.login);
 
-    if (codigoConfirmacao == "00") {
-      try {
-        const escolaAvancadaAPI = await axios.post(`${api}usuarios/listar`, formData, config);
-        const { erro, resultado } = escolaAvancadaAPI.data;
-
-        if (resultado && resultado.login) {
-          res.status(200).json({ codigo_retorno: "00" });
+          if(delUser && delUser > 0) {
+            res.status(200).json({ codigo_retorno: "00" });
+          }
+          res.status(400).json({ codigo_retorno: "99" });
         }
         else {
-          res.status(400).json({ codigo_retorno: "" });
+          res.status(400).json({ codigo_retorno: "99" });
         }
-      } catch (error) {
-        res.status(500).json({ codigo_retorno: "" });
+
+      }
+      else {
+        res.status(400).json({ codigo_retorno: "99" });
       }
     }
     else {
-      try {
-        const escolaAvancadaAPI = await axios.post(`${api}usuarios/editar`, formData, config);
-        const { erro, resultado } = escolaAvancadaAPI.data;
-
-        if (resultado && resultado.length) {
-          res.status(200).json({
-            codigo_retorno: "",
-          });
-        }
-
-      } catch (error) {
-        res.status(500).json({
-          codigo_retorno: "",
-        });
-      }
+      res.status(400).json({ codigo_retorno: "99" });
     }
 
   } catch (error) {
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
+
+async function getUserEA(idAluno) {
+  const formData = new URLSearchParams();
+  formData.append("token", token);
+  formData.append("id", idAluno);
+
+  try {
+    const escolaAvancadaAPI = await axios.post(`${api}usuarios/listar`, formData, config);
+    const { erro, resultado } = escolaAvancadaAPI.data;
+    return resultado ?? erro;
+  } catch (error) {
+    return { error };
+  }
+}
+
+async function saveUserProtocolDB(userId, protocol) {
+  return new Promise((resolve, reject) => {
+      db.insertData(userId, protocol, (lastId) => {
+          resolve({ id: lastId });
+      });
+  });
+}
+
+async function getUserProtocolDB(userId, protocol) {
+  return new Promise((resolve, reject) => {
+      db.getData(userId, protocol, (rows) => {
+          resolve(rows);
+      });
+  });
+}
+
+async function deleteUserDB(userId) {
+  return new Promise((resolve, reject) => {
+    db.deleteDataByUserId(userId, (changes) => {
+      resolve(changes);
+    });
+  });
+}
 
 async function getAluno(cpfAluno) {
   const formData = new URLSearchParams();
