@@ -1,62 +1,67 @@
-const sqlite3 = require('sqlite3').verbose();
+const { Pool } = require('pg');
+require('dotenv').config();
 
-const db = new sqlite3.Database('./database/database.db');
+const pool = new Pool({
+  connectionString: process.env.POSTGRES_URL,
+});
 
-db.serialize(() => {
-    db.run(`CREATE TABLE IF NOT EXISTS user (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        protocol TEXT UNIQUE,
-        user_id TEXT UNIQUE
-    )`);
+pool.query(`CREATE TABLE IF NOT EXISTS "user" (
+  id SERIAL PRIMARY KEY,
+  protocol TEXT UNIQUE,
+  user_id TEXT UNIQUE
+)`, (err, result) => {
+  if (err) {
+    console.error('Erro ao criar a tabela:', err);
+  } else {
+    console.log('Tabela criada com sucesso.');
+  }
 });
 
 function insertData(userId, protocol, callback) {
   if (!userId || !protocol) {
-      return callback(-1);
+    return callback(-1);
   }
 
-  db.run(`INSERT INTO user (user_id, protocol) VALUES (?, ?)`, [userId, protocol], function (err) {
-      if (err) {
-          return callback(-1);
-      }
-      callback(this.lastID);
+  pool.query(`INSERT INTO "user" (user_id, protocol) VALUES ($1, $2) RETURNING id`, [userId, protocol], (err, result) => {
+    if (err) {
+      console.error('Erro ao inserir dados:', err);
+      return callback(-1);
+    }
+    callback(result.rows[0].id);
   });
 }
 
 function getData(user_id, protocol, callback) {
-  let sql = `SELECT id, user_id, protocol FROM user WHERE 1`;
+  let sql = `SELECT id, user_id, protocol FROM "user" WHERE 1`;
   let params = [];
 
   if (protocol) {
-      sql += ` AND protocol = ?`;
-      params.push(protocol);
+    sql += ` AND protocol = $1`;
+    params.push(protocol);
   } else if (user_id) {
-      sql += ` AND user_id = ?`;
-      params.push(user_id);
+    sql += ` AND user_id = $1`;
+    params.push(user_id);
   } else {
-      return callback([]);
+    return callback([]);
   }
 
-  db.all(sql, params, (err, rows) => {
-      if (err) {
-          return callback([]);
-      }
-      callback(rows);
+  pool.query(sql, params, (err, result) => {
+    if (err) {
+      console.error('Erro ao buscar dados:', err);
+      return callback([]);
+    }
+    callback(result.rows);
   });
 }
 
 function deleteDataByUserId(userId, callback) {
-  db.run(`DELETE FROM user WHERE user_id = ?`, [userId], function (err) {
-      if (err) {
-          console.error('Erro ao excluir dados:', err.message);
-          return callback(-1);
-      }
-      callback(this.changes);
+  pool.query(`DELETE FROM "user" WHERE user_id = $1`, [userId], (err, result) => {
+    if (err) {
+      console.error('Erro ao excluir dados:', err);
+      return callback(-1);
+    }
+    callback(result.rowCount);
   });
 }
-
-
-
-
 
 module.exports = { insertData, getData, deleteDataByUserId };
