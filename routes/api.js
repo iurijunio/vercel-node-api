@@ -69,9 +69,9 @@ router.post('/registraAtendimento', async (req, res) => {
 
 router.post('/confirmarAtendimento', async (req, res) => {
   try {
-    const { protocolo, codigoConfirmacao } = req.body;
+    const { numeroProtocolo, codigoConfirmacao } = req.body;
     if(codigoConfirmacao == "00") {
-      const dbData = await getUserProtocolDB("", protocolo);
+      const dbData = await getUserProtocolDB("", numeroProtocolo);
       
       if(dbData && dbData.length) {
         const userEA = await getUserEA(dbData[0].user_id);
