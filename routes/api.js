@@ -77,12 +77,12 @@ router.post('/confirmarAtendimento', async (req, res) => {
         const userEA = await getUserEA(dbData[0].user_id);
         
         if(userEA && userEA.login) {
-          const delUser = await deleteUserDB(userEA.login);
+          // const delUser = await deleteUserDB(userEA.login);
 
-          if(delUser && delUser > 0) {
+          // if(delUser && delUser > 0) {
             res.status(200).json({ codigo_retorno: "00" });
-          }
-          res.status(400).json({ codigo_retorno: "99" });
+          // }
+          // res.status(400).json({ codigo_retorno: "99" });
         }
         else {
           res.status(400).json({ codigo_retorno: "99" });
