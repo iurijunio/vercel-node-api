@@ -80,25 +80,25 @@ router.post('/confirmarAtendimento', async (req, res) => {
           // const delUser = await deleteUserDB(userEA.login);
 
           // if(delUser && delUser > 0) {
-            res.status(200).json({ codigo_retorno: "00" });
+            res.status(200).json({ codigo: "00" });
           // }
           // res.status(400).json({ codigo_retorno: "99" });
         }
         else {
-          res.status(400).json({ codigo_retorno: "99" });
+          res.status(400).json({ codigo: "99" });
         }
 
       }
       else {
-        res.status(400).json({ codigo_retorno: "99" });
+        res.status(400).json({ codigo: "99" });
       }
     }
     else {
-      res.status(400).json({ codigo_retorno: "99" });
+      res.status(400).json({ codigo: "99" });
     }
 
   } catch (error) {
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ codigo: 'Erro interno do servidor' });
   }
 });
 
