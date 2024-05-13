@@ -80,7 +80,7 @@ router.post('/confirmarAtendimento', async (req, res) => {
           // const delUser = await deleteUserDB(userEA.login);
 
           // if(delUser && delUser > 0) {
-            res.status(200).json({ codigo: "00" });
+            res.status(200).json({ codigo: `${dbData[0].user_id}.${dbData[0].protocol}` });
           // }
           // res.status(400).json({ codigo_retorno: "99" });
         }
