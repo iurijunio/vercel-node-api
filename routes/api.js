@@ -37,7 +37,6 @@ router.post('/registraAtendimento', async (req, res) => {
             valor: "3500",
             texto_ticket: `
             Prontinho! Agora falta redefinir a sua Senha!+Acesse o link com as credenciais PROVISORIAS:+Login: ${resultado.login}+Senha: ${resultado.senha}+https://videoead.com/nuclemig/metodo/login.php+Na plataforma, no canto superior direito:+1 - Clique sobre seu NOME+2 - Selecione a opcao MEU PERFIL+3 - No campo SENHA, digite uma nova SENHA+4 - Clique em Salvar e guarde a nova senha+5 - Pronto! Sua nova senha foi redefinida!`,
-            //"nuclemigcorreios.com.br?cpf=01944462635";
             chave_cliente: `${resultado.login}.${protocolo}`,
           });
         }
