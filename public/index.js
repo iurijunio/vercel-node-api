@@ -4,8 +4,26 @@ const user = {};
 
 window.onload = function () {
   createSelectListaDeCursos();
-  verifyCPFAluno();
+  getCursos([]);
 };
+
+function nextStep(nextStepIs2) {
+  const step1 = document.getElementById('step1');
+  const step2 = document.getElementById('step2');
+
+  if(nextStepIs2) { 
+    step1.classList.add('hide-step');
+    step1.classList.remove('show-step');
+    step2.classList.add('show-step');
+    step2.classList.remove('hide-step');
+  }
+  else {
+    step2.classList.add('hide-step');
+    step2.classList.remove('show-step');
+    step1.classList.add('show-step');
+    step1.classList.remove('hide-step');
+  }
+}
 
 function hideErrorMessage() {
   const htmlErrorMessage = document.getElementById('errorMessage');
@@ -27,61 +45,26 @@ function createSelectListaDeCursos() {
   selectCursos.appendChild(placeholderOption);
 }
 
-
-function verifyCPFAluno() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const cpfAluno = urlParams.get('cpf');
-  
-  if(!cpfAluno || (cpfAluno && cpfAluno.length != 11 )) {
-    showErrorMessage("CPF não informado. Verifique se a url está correta e tente novamente.");
-    document.getElementById("cpf").disabled = true;
-    document.getElementById("protocolo").disabled = true;
-    document.getElementById("curso").disabled = true;
-    document.getElementById("btnSubmit").disabled = true;
-    return;
+function getAlunoEProtocolo() {
+  hideErrorMessage();
+  const login = document.getElementById('login').value;
+  const protocolo = document.getElementById('protocolo').value;
+  const body = JSON.stringify({ login, protocolo });
+  if(user.login === login) {
+    nextStep(true);
   }
-
-  document.getElementById("cpf").value = cpfAluno;
-  document.getElementById("cpf").disabled = true;
-  getAluno(cpfAluno);
-}
-
-function getAluno(cpfAluno) {
-  const body = JSON.stringify({ cpfAluno });
-
-  fetch('/api/listarAluno', { headers,  method: 'POST', body }).then(response => response.json()).then(data => {
-    if(data.login) {
-      user.login = data.login;
-      getCursosDoAluno(data.login);
-    }
-    else {
-      const err = data.error ? data.error : data;
-      showErrorMessage(err);
-    }
-  })
-    .catch(error => console.error('Erro:', error));
-}
-
-function getCursosDoAluno(idAluno) {
-  const body = JSON.stringify({ idAluno });
-  fetch('/api/cursosDoAluno', { headers,  method: 'POST', body }).then(response => response.json()).then(data => {
-    if (data.resultado != 'Sem cursos para mostrar') {
-      const cursosDoAluno = [];
-      for (c of data.resultado) {
-        cursosDoAluno.push(c.Curso);
+  else {
+    fetch('/api/listarAluno', { headers,  method: 'POST', body }).then(response => response.json()).then(data => {
+      if(data.login) {
+        user.login = data.login;
+        nextStep(true);
       }
-      getCursos(cursosDoAluno);
-    }
-    else if (data.resultado === 'Sem cursos para mostrar') {
-      getCursos([]);
-    }
-    else {
-      const err = data.erro ? data.erro : data;
-      console.log(err)
-      showErrorMessage(err);
-    }
-  })
-    .catch(error => console.error('Erro:', error));
+      else {
+        const err = data.error ? data.error : data;
+        showErrorMessage(err);
+      }
+    }).catch(error => console.error('Erro:', error))
+  }
 }
 
 function getCursos(cursosDoAluno) {
@@ -89,7 +72,7 @@ function getCursos(cursosDoAluno) {
     data.forEach(curso => {
       const option = document.createElement('option');
       option.value = curso.capa_image.split('imagemcursos/')[1].split('.')[0] ?? '';
-      option.text = curso.nome;
+      option.text = curso.nome + ' (' + curso.carga_horaria + ' horas)';
       option.disabled = cursosDoAluno.includes(curso.nome);
       selectCursos.appendChild(option);
     });
@@ -102,10 +85,12 @@ document.getElementById('form').addEventListener('submit', function (event) {
   
   const protocolo = document.getElementById('protocolo').value;
   const idAluno = user.login;
-  const cpfAluno = document.getElementById('cpf').value;
   const idCurso = document.getElementById('curso').value;
-  const body = JSON.stringify({ protocolo, idAluno, cpfAluno, idCurso });
-  
+  const name = document.getElementById('name').value;
+  const cpf = document.getElementById('cpf').value;
+  const tel = document.getElementById('telefone').value;
+  const body = JSON.stringify({ protocolo, idAluno, idCurso, name, cpf, tel });
+
   fetch('/api/vincularAlunoAoCurso', { headers,  method: 'POST', body }).then(response => response.json()).then(data => {
     if(data.resultado) {
       validateFormSbmit(document.getElementById('curso').selectedOptions[0].textContent);
