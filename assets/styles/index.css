@@ -135,6 +135,7 @@ form i a {
   justify-content: center !important;
   border: 2px solid #2477d7 !important;
   padding: 0 !important;
+  text-decoration: none !important;
 }
 
 .card-divisor-2 form .btn-send, .card-divisor-2 form .btn-outline, #result a {
