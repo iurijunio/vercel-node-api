@@ -26,10 +26,24 @@
               Para finalizar, preencha os campos abaixo e selecione o curso de sua preferência:</p>
             <i class="desc">Em caso de dúvidas, entre em contato com nosso <a href="https://wa.me/553197363088?text=Olá!%20Quero%20tirar%20uma%20dúvida" target="_blank">suporte</a>.<br/> 
             </i>
-            <input type="text" id="cpf" name="cpf" placeholder="CPF (apenas números)" required minlength="11" maxlength="11">
-            <input type="text" id="protocolo" name="protocolo" placeholder="Protocolo" required minlength="4" maxlength="30">
-            <select id="curso" name="curso" required></select>
-            <input id="btnSubmit" type="submit" class="btn-send" value="Enviar">
+
+            <div id="step1" class="show-step">
+              <input type="text" id="login" name="login" placeholder="Login" required minlength="4" maxlength="11">
+              <input type="text" id="protocolo" name="protocolo" placeholder="Chave de acesso" required minlength="4" maxlength="30">
+              <select id="curso" name="curso" required></select>
+              <button class="btn-send" onclick="getAlunoEProtocolo()">Continuar</button>
+            </div>
+            
+            <div id="step2" class="hide-step">
+              <input type="text" id="name" name="name" placeholder="Nome do aluno a ser matriculado" required minlength="4" maxlength="100">
+              <input type="text" id="cpf" name="cpf" placeholder="CPF do aluno (apenas números)" required minlength="11" maxlength="11">
+              <input type="text" id="telefone" name="telefone" placeholder="Telefone do aluno (ddd + número)" required minlength="11" maxlength="11">
+              <div class="buttons-container">
+                <button class="btn-outline" onclick="nextStep(false)">Voltar</button>
+                <input id="btnSubmit" type="submit" class="btn-send" value="Finalizar">
+              </div>
+            </div>
+            
             <!-- Exibição do resultado -->
           </form>
           <div id="result"></div>

@@ -22,7 +22,7 @@ function getAPIParamsConfig(telefoneUsuario, cpfUsuario, nomeUsuario, protocolo)
 router.post('/registraAtendimento', async (req, res) => {
   try {
     const { telefoneUsuario, cpfUsuario, nomeUsuario, protocolo } = req.body;
-    const { formData } = getAPIParamsConfig(telefoneUsuario, cpfUsuario, nomeUsuario, protocolo);
+    const { formData } = getAPIParamsConfig(telefoneUsuario, cpfUsuario, nomeUsuario, protocolo, {status: 'ativo'});
 
     try {
       const escolaAvancadaAPI = await axios.post(`${api}usuarios/novo`, formData, config);
@@ -37,6 +37,7 @@ router.post('/registraAtendimento', async (req, res) => {
             valor: "3500",
             texto_ticket: `
             Prontinho! Agora falta redefinir a sua Senha!+Acesse o link com as credenciais PROVISORIAS:+Login: ${resultado.login}+Senha: ${resultado.senha}+https://videoead.com/nuclemig/metodo/login.php+Na plataforma, no canto superior direito:+1 - Clique sobre seu NOME+2 - Selecione a opcao MEU PERFIL+3 - No campo SENHA, digite uma nova SENHA+4 - Clique em Salvar e guarde a nova senha+5 - Pronto! Sua nova senha foi redefinida!`,
+            //"nuclemigcorreios.com.br?cpf=01944462635";
             chave_cliente: `${resultado.login}.${protocolo}`,
           });
         }
@@ -61,7 +62,6 @@ router.post('/registraAtendimento', async (req, res) => {
     }
 
   } catch (error) {
-    console.error(error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
@@ -139,10 +139,10 @@ async function deleteUserDB(userId) {
   });
 }
 
-async function getAluno(cpfAluno) {
+async function getAluno(login) {
   const formData = new URLSearchParams();
   formData.append('token', token);
-  formData.append('cpf', cpfAluno);
+  formData.append('id', login);
   
   try {
     const response = await axios.post(`${api}usuarios/listar`, formData, config);
@@ -154,16 +154,34 @@ async function getAluno(cpfAluno) {
 
 router.post('/listarAluno', async (req, res) => {
   try {
-    const resultado = await getAluno(req.body.cpfAluno);
-    if (!resultado.login && resultado.aviso) {
-      return res.status(404).json({ error: resultado.aviso }); // não foi encontrado nenhum aluno com este filtro.
+  const { protocolo } = req.body;
+  const dbData = await getUserProtocolDB("", parseInt(protocolo));
+  if(dbData && dbData.length) {
+    try {
+      const resultado = await getAluno(req.body.login);
+      if (!resultado.login && resultado.aviso) {
+        return res.status(404).json({ error: resultado.aviso }); // não foi encontrado nenhum aluno com este filtro.
+      }
+      if(resultado.status === "ATIVO") {
+        return res.status(404).json({ error: "Esse acesso já está ativo em nossa plataforma." });
+      }
+      res.json(resultado); // sucesso. Dados do aluno
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
-    res.json(resultado); // sucesso. Dados do aluno
-  } catch (error) {
-    res.status(500).json({ error: error.message });
   }
+  else {
+    res.status(400).json({ error: "Protocolo inválido. Verifique-o e tente novamente." });
+  }
+}
+catch(error) {
+    res.status(400).json({ error: error.message });
+  }
+  
 });
 
+
+// -------------- CURSOS DO ALUNO
 async function getCursosDoAluno(idAluno) {
   const formData = new URLSearchParams();
   formData.append('token', token);
@@ -185,7 +203,9 @@ router.post('/cursosDoAluno', async (req, res) => {
       return res.status(500).json({ error: error.message });
     }
 });
+// -------------- CURSOS DO ALUNO
 
+// -------------- LSITAR CURSOS ESCOLA AVANÇADA
 router.get('/listarCursos', async (req, res) => {
   const formData = new URLSearchParams();
   formData.append('token', token);
@@ -195,17 +215,18 @@ router.get('/listarCursos', async (req, res) => {
 });
 
 
-async function editarAluno (aluno) {
+async function editarAluno (aluno, name, cpf, tel) {
   const formData = new URLSearchParams();
   formData.append('token', token);
-  
   for (const key in aluno) {
     formData.append(key, aluno[key]);
   }
-  formData.set('id_aluno', parseInt(aluno.login));
-  formData.set('obs', '5555');
+
+  formData.set('id_aluno', aluno.login);
+  formData.set('nome', name);
+  formData.set('cpf', cpf);
+  formData.set('fone', tel);
   formData.set('status', 'ativo');
-  
   try {
     const response = await axios.post(`${api}usuarios/editar`, formData, config);
     return response.data.resultado;
@@ -221,7 +242,6 @@ async function vincularAlunoAoCurso(idAluno, idCurso) {
   formData.append('aluno', idAluno);
   try {
     const response = await axios.post(`${api}usuarios/vinculocurso`, formData, config);
-    console.log(response.data.resultado);
     return response.data;
   } catch (error) {
     throw error.response?.data?.erro || 'Erro desconhecido ao vincular aluno ao curso.';
@@ -229,17 +249,13 @@ async function vincularAlunoAoCurso(idAluno, idCurso) {
 }
 
 router.post('/vincularAlunoAoCurso', async (req, res) => {
-  const { protocolo, cpfAluno, idCurso } = req.body;
+  const { protocolo, idAluno, idCurso, name, cpf, tel } = req.body;
 
   try {
-    const aluno = await getAluno(cpfAluno);
-    if (!aluno.login && aluno.aviso) {
-      return res.status(404).json({ error: aluno.aviso });
-    }
-
-    if(protocolo == aluno.obs) {
+    const aluno = await getAluno(idAluno);
+    if (aluno.login) {
       try {
-        const editAluno = await editarAluno(aluno);
+        const editAluno = await editarAluno(aluno, name, cpf, tel);
         if (editAluno.includes('sucesso')) {
           try {
             const vincAlunoCurso = await vincularAlunoAoCurso(aluno.login, idCurso);
@@ -261,9 +277,7 @@ router.post('/vincularAlunoAoCurso', async (req, res) => {
         return res.status(500).json({ error: error.message });
       }
     }
-    else {
-      return res.status(404).json({ error: "O protocolo informado é incorreto. Verifique-o e tente novamente." });
-    }
+    
     
   } catch (error) {
     res.status(500).json({ error: error.message });
