@@ -22,7 +22,7 @@ function getAPIParamsConfig(telefoneUsuario, cpfUsuario, nomeUsuario, protocolo)
 router.post('/registraAtendimento', async (req, res) => {
   try {
     const { telefoneUsuario, cpfUsuario, nomeUsuario, protocolo } = req.body;
-    const { formData } = getAPIParamsConfig(telefoneUsuario, cpfUsuario, nomeUsuario, protocolo, {status: 'ativo'});
+    const { formData } = getAPIParamsConfig(telefoneUsuario, cpfUsuario, nomeUsuario, protocolo);
 
     try {
       const escolaAvancadaAPI = await axios.post(`${api}usuarios/novo`, formData, config);
@@ -36,8 +36,14 @@ router.post('/registraAtendimento', async (req, res) => {
             descricao_retorno: "Operação realizada com sucesso.",
             valor: "3500",
             texto_ticket: `
-            Prontinho! Agora falta redefinir a sua Senha!+Acesse o link com as credenciais PROVISORIAS:+Login: ${resultado.login}+Senha: ${resultado.senha}+https://videoead.com/nuclemig/metodo/login.php+Na plataforma, no canto superior direito:+1 - Clique sobre seu NOME+2 - Selecione a opcao MEU PERFIL+3 - No campo SENHA, digite uma nova SENHA+4 - Clique em Salvar e guarde a nova senha+5 - Pronto! Sua nova senha foi redefinida!`,
-            //"nuclemigcorreios.com.br?cpf=01944462635";
+            Prontinho! Agora basta acessar:
+            +nuclemigcorreios.com.br
+            +Login: ${resultado.login}
+            +Senha: ${resultado.senha}
+            +Chave de Acesso: ${protocolo}
+            +Finalize o seu cadastro e, ao terminar, 
+            +voce sera redirecionado a nossa plataforma.
+            +Recomendamos nao deixar de alterar a sua senha.`,
             chave_cliente: `${resultado.login}.${protocolo}`,
           });
         }
@@ -70,7 +76,7 @@ router.post('/confirmarAtendimento', async (req, res) => {
   try {
     const { numeroProtocolo, codigoConfirmacao } = req.body;
     if(codigoConfirmacao == "00") {
-      const dbData = await getUserProtocolDB("", numeroProtocolo);
+      const dbData = await getUserProtocolDB("", numeroProtocolo, true);
       
       if(dbData && dbData.length) {
         const userEA = await getUserEA(dbData[0].user_id);
@@ -123,9 +129,9 @@ async function saveUserProtocolDB(userId, protocol) {
   });
 }
 
-async function getUserProtocolDB(userId, protocol) {
+async function getUserProtocolDB(userId, protocol, status) {
   return new Promise((resolve, reject) => {
-      db.getData(userId, protocol, (rows) => {
+      db.getData(userId, protocol, status, (rows) => {
           resolve(rows);
       });
   });
@@ -154,9 +160,12 @@ async function getAluno(login) {
 
 router.post('/listarAluno', async (req, res) => {
   try {
-  const { protocolo } = req.body;
-  const dbData = await getUserProtocolDB("", parseInt(protocolo));
+  const { login, protocolo } = req.body;
+  const dbData = await getUserProtocolDB(login, parseInt(protocolo), false);
   if(dbData && dbData.length) {
+    if(!dbData[0].active) {
+      return res.status(404).json({ error: "Usuário cadastrado incorretamente. Tente outro ou entre em contato com nosso suporte." });
+    }
     try {
       const resultado = await getAluno(req.body.login);
       if (!resultado.login && resultado.aviso) {
@@ -171,7 +180,7 @@ router.post('/listarAluno', async (req, res) => {
     }
   }
   else {
-    res.status(400).json({ error: "Protocolo inválido. Verifique-o e tente novamente." });
+    res.status(400).json({ error: "Dados inválidos. Verifique-os e tente novamente." });
   }
 }
 catch(error) {

@@ -1,7 +1,7 @@
 const headers = { 'Content-Type': 'application/json' };
 const selectCursos = document.getElementById('curso');
 const user = {};
-
+let loading = false;
 window.onload = function () {
   createSelectListaDeCursos();
   getCursos([]);
@@ -46,15 +46,19 @@ function createSelectListaDeCursos() {
 }
 
 function getAlunoEProtocolo() {
+  if(loading) return;
+  loading = true;
   hideErrorMessage();
   const login = document.getElementById('login').value;
   const protocolo = document.getElementById('protocolo').value;
   const body = JSON.stringify({ login, protocolo });
   if(user.login === login) {
+    loading = false;
     nextStep(true);
   }
   else {
     fetch('/api/listarAluno', { headers,  method: 'POST', body }).then(response => response.json()).then(data => {
+      loading = false;
       if(data.login) {
         user.login = data.login;
         nextStep(true);
@@ -63,7 +67,10 @@ function getAlunoEProtocolo() {
         const err = data.error ? data.error : data;
         showErrorMessage(err);
       }
-    }).catch(error => console.error('Erro:', error))
+    }).catch(error => {
+      loading = false;
+      console.error('Erro:', error)
+    })
   }
 }
 
@@ -80,6 +87,8 @@ function getCursos(cursosDoAluno) {
 }
 
 document.getElementById('form').addEventListener('submit', function (event) {
+  if(loading) return;
+  loading = true;
   hideErrorMessage();
   event.preventDefault();
   
@@ -92,6 +101,7 @@ document.getElementById('form').addEventListener('submit', function (event) {
   const body = JSON.stringify({ protocolo, idAluno, idCurso, name, cpf, tel });
 
   fetch('/api/vincularAlunoAoCurso', { headers,  method: 'POST', body }).then(response => response.json()).then(data => {
+    loading = false;
     if(data.resultado) {
       validateFormSbmit(document.getElementById('curso').selectedOptions[0].textContent);
     }
@@ -100,7 +110,10 @@ document.getElementById('form').addEventListener('submit', function (event) {
       showErrorMessage(err);
     }
   })
-    .catch(error => console.error('Erro:', error));
+    .catch(error => {
+      loading = false;
+      console.error('Erro:', error);
+    });
 });
 
 function validateFormSbmit(curso) {
