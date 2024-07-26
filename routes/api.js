@@ -78,6 +78,11 @@ router.post('/confirmarAtendimento', async (req, res) => {
     
       const dbData = await getUserProtocolDB("", numeroProtocolo, codigoConfirmacao == "00" ? true : false);
       
+      if(dbData && dbData.length && codigoConfirmacao == "00") {
+        res.status(200).json({ codigo: `${dbData[0].user_id}.${dbData[0].protocol}` });
+        return;
+      }
+
       if(dbData && dbData.length) {
         const userEA = await getUserEA(dbData[0].user_id);
         
