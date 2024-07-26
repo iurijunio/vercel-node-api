@@ -75,8 +75,8 @@ router.post('/registraAtendimento', async (req, res) => {
 router.post('/confirmarAtendimento', async (req, res) => {
   try {
     const { numeroProtocolo, codigoConfirmacao } = req.body;
-    if(codigoConfirmacao == "00") {
-      const dbData = await getUserProtocolDB("", numeroProtocolo, true);
+    
+      const dbData = await getUserProtocolDB("", numeroProtocolo, codigoConfirmacao == "00" ? true : false);
       
       if(dbData && dbData.length) {
         const userEA = await getUserEA(dbData[0].user_id);
@@ -97,10 +97,6 @@ router.post('/confirmarAtendimento', async (req, res) => {
       else {
         res.status(400).json({ codigo: "99" });
       }
-    }
-    else {
-      res.status(400).json({ codigo: "99" });
-    }
 
   } catch (error) {
     res.status(500).json({ codigo: 'Erro interno do servidor' });
